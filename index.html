@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1e3a8a">
+  <title>あなたのSNS危険度診断</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>あなたの<br>SNS危険度診断</h1>
+    <p class="subtitle">5つの質問で、あなたのネットの“スキ”をチェック！</p>
+  </header>
+
+  <main>
+    <!-- ===== 診断入力画面 ===== -->
+    <section id="form-screen" class="screen">
+      <div class="card rules">
+        <h2>あそびかた</h2>
+        <p>Q1〜Q5の質問に、ふだんの自分に近いほうを「はい」か「いいえ」で答えてください。<br>すべて答えたら「診断結果を見る」を押してね！</p>
+      </div>
+
+      <form id="diagnosis-form" novalidate>
+        <div id="questions"></div>
+
+        <div class="card survey">
+          <h2>アンケート <span class="badge-optional">任意</span></h2>
+
+          <fieldset class="survey-item">
+            <legend>年齢層</legend>
+            <div class="choice-list" id="age-list"></div>
+          </fieldset>
+
+          <fieldset class="survey-item">
+            <legend>感想（いくつでも）</legend>
+            <div class="choice-list" id="impression-list"></div>
+          </fieldset>
+
+          <div class="survey-item">
+            <label for="impression-text" class="legend-like">ひとこと感想</label>
+            <input type="text" id="impression-text" name="impression_text" placeholder="自由にお書きください" autocomplete="off">
+          </div>
+        </div>
+
+        <p class="privacy">🔒 この診断では、氏名・連絡先など<strong>個人を特定できる情報は一切取得しません</strong>。回答内容は統計目的でのみ利用します。</p>
+
+        <p id="form-error" class="form-error" role="alert" hidden></p>
+
+        <button type="submit" class="btn btn-primary">診断結果を見る</button>
+      </form>
+    </section>
+
+    <!-- ===== 診断結果画面 ===== -->
+    <section id="result-screen" class="screen" hidden>
+      <div id="result-rank" class="card result-rank">
+        <p class="result-score" id="result-score"></p>
+        <h2 id="result-title"></h2>
+        <p id="result-state"></p>
+        <div class="advice-overall">
+          <h3>アドバイス</h3>
+          <p id="result-advice"></p>
+        </div>
+      </div>
+
+      <div id="individual-advice" class="card" hidden>
+        <h2>あなたへの個別アドバイス</h2>
+        <ul id="advice-list" class="advice-list"></ul>
+      </div>
+
+      <button type="button" id="restart-btn" class="btn btn-secondary">最初に戻る</button>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>主催：○○警察署・○○大学 防犯ボランティア</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

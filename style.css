@@ -1,0 +1,318 @@
+:root {
+  --navy: #1e3a8a;
+  --navy-dark: #172554;
+  --bg: #eef2f7;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
+  --yellow: #ca8a04;
+  --yellow-bg: #fefce8;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", Meiryo, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ===== ヘッダー / フッター ===== */
+.site-header {
+  background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+  color: #fff;
+  text-align: center;
+  padding: 28px 16px 24px;
+}
+.site-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.35;
+  letter-spacing: 0.04em;
+}
+.subtitle {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+.site-footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 24px 16px 32px;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* ===== カード ===== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  margin: 0 0 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.card h2 {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  color: var(--navy);
+}
+.rules p { margin: 0; font-size: 0.95rem; }
+
+fieldset {
+  border: none;
+  min-width: 0;
+}
+
+/* ===== 質問 ===== */
+.question {
+  border: 2px solid transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.question legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 14px;
+  font-weight: bold;
+}
+.question legend + * { clear: both; }
+.q-num {
+  display: inline-block;
+  background: var(--navy);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0 8px;
+  margin-right: 8px;
+  font-size: 0.9rem;
+}
+.question.unanswered {
+  border-color: var(--red);
+  background: var(--red-bg);
+}
+
+.yesno {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.yesno-option { position: relative; }
+.yesno-option input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+}
+.yesno-option span {
+  display: block;
+  text-align: center;
+  padding: 12px 0;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.15s;
+}
+.yesno-option.yes input:checked + span {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+.yesno-option.no input:checked + span {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+.yesno-option input:focus-visible + span {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+/* ===== アンケート ===== */
+.badge-optional {
+  font-size: 0.75rem;
+  background: #e5e7eb;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 2px 8px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.survey-item {
+  margin: 0 0 16px;
+  padding: 0;
+}
+.survey-item:last-child { margin-bottom: 0; }
+.survey-item legend,
+.legend-like {
+  display: block;
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  padding: 0;
+}
+.choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.choice {
+  position: relative;
+}
+.choice input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+}
+.choice span {
+  display: inline-block;
+  padding: 8px 14px;
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.15s;
+}
+.choice input:checked + span {
+  border-color: var(--navy);
+  background: #dbeafe;
+  color: var(--navy);
+  font-weight: bold;
+}
+.choice input:focus-visible + span {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+#impression-text {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px; /* iOSでのズーム防止 */
+  font-family: inherit;
+}
+#impression-text:focus {
+  outline: none;
+  border-color: var(--navy);
+}
+
+/* ===== 注記・エラー ===== */
+.privacy {
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+}
+.form-error {
+  color: var(--red);
+  font-weight: bold;
+  text-align: center;
+  margin: 0 0 12px;
+}
+
+/* ===== ボタン ===== */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary {
+  background: linear-gradient(135deg, #2563eb, var(--navy));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.35);
+}
+.btn-secondary {
+  background: #fff;
+  color: var(--navy);
+  border: 2px solid var(--navy);
+}
+
+/* ===== 結果画面 ===== */
+.result-rank {
+  border-top: 8px solid var(--border);
+  text-align: center;
+}
+.result-rank h2 {
+  font-size: 1.3rem;
+  line-height: 1.5;
+  margin: 4px 0 12px;
+}
+.result-score {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.advice-overall {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+.advice-overall h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+.advice-overall p { margin: 0; }
+
+.rank-max { border-top-color: var(--red); background: var(--red-bg); }
+.rank-max h2 { color: var(--red); }
+.rank-caution { border-top-color: var(--yellow); background: var(--yellow-bg); }
+.rank-caution h2 { color: #a16207; }
+.rank-safe { border-top-color: var(--green); background: var(--green-bg); }
+.rank-safe h2 { color: var(--green); }
+
+.advice-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.advice-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-top: 1px solid #e5e7eb;
+}
+.advice-list li:first-child { border-top: none; padding-top: 0; }
+.advice-q {
+  flex-shrink: 0;
+  background: var(--red);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  line-height: 1.8;
+}
+
+#result-screen .btn { margin-top: 8px; }
