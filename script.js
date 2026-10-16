@@ -269,7 +269,26 @@ function renderResult(set, { items, score, result }) {
     list.appendChild(li);
   });
 
+  renderLinks(set);
   showScreen("result-screen");
+}
+
+function renderLinks(set) {
+  const links = Array.isArray(set.links) ? set.links : [];
+  $("links-card").hidden = links.length === 0;
+  $("links-title").textContent = set.linksTitle || "参考リンク";
+  const list = $("links-list");
+  list.innerHTML = "";
+  links.forEach((link) => {
+    const li = el("li");
+    const a = el("a", "", link.title);
+    a.href = link.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    li.appendChild(a);
+    if (link.note) li.appendChild(el("p", "link-note", link.note));
+    list.appendChild(li);
+  });
 }
 
 // ===== データ送信（結果表示をブロックしない） =====
