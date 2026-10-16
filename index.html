@@ -95,6 +95,10 @@
 
       <!-- ===== 結果画面 ===== -->
       <section id="result-screen" class="screen" hidden>
+        <p id="revisit-note" class="revisit-note" hidden>
+          📷 保存した結果を表示しています
+        </p>
+
         <div id="result-rank" class="card result-rank">
           <p class="result-score" id="result-score"></p>
           <h2 id="result-title"></h2>
@@ -115,16 +119,46 @@
           <ul id="links-list" class="links-list"></ul>
         </div>
 
+        <button type="button" id="save-image-btn" class="btn btn-primary">
+          📷 結果を画像で保存
+        </button>
         <button type="button" id="restart-btn" class="btn btn-secondary">
           最初に戻る
         </button>
       </section>
     </main>
 
+    <!-- ===== 結果画像の保存 ===== -->
+    <div
+      id="save-modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="save-modal-title"
+      hidden
+    >
+      <div class="modal-body">
+        <h2 id="save-modal-title">結果の画像</h2>
+        <p class="modal-note">
+          画像の中のQRコードを読み取ると、あとから全問の解説を見返せます。<br />
+          うまく保存できないときは、画像を長押しして保存してください。
+        </p>
+        <img id="save-preview" class="save-preview" alt="診断結果の画像" />
+        <button type="button" id="share-btn" class="btn btn-primary">
+          画像を保存・共有する
+        </button>
+        <a id="download-link" class="btn btn-secondary">画像をダウンロード</a>
+        <button type="button" id="modal-close-btn" class="btn btn-text">
+          閉じる
+        </button>
+      </div>
+    </div>
+
     <footer class="site-footer">
       <p>主催：近畿大学 防犯ボランティア</p>
     </footer>
 
+    <script src="vendor/qrcode.min.js"></script>
     <script src="questions.js"></script>
     <script src="script.js"></script>
   </body>

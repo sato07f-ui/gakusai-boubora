@@ -487,3 +487,57 @@ fieldset {
 }
 
 #result-screen .btn { margin-top: 8px; }
+
+.revisit-note {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #dbeafe;
+  color: var(--navy);
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ===== 画像保存モーダル ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  overflow-y: auto;
+}
+.modal-body {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+}
+.modal-body h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  color: var(--navy);
+}
+.modal-note {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.save-preview {
+  display: block;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.modal-body .btn { margin-top: 8px; }
+a.btn {
+  text-align: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}

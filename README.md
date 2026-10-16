@@ -22,6 +22,15 @@
 コース選択 → 質問（1問ずつ） → アンケート（任意） → 結果
 ```
 
+## 結果画像の保存
+
+結果画面の「📷 結果を画像で保存」から、判定・点数・各問の○×をまとめた画像（認定カード）を保存できます。
+
+- 画像の下のQRコードには、その人の回答を含んだURL（例：`?c=elementary&a=BBACBBBBCB`）が入っています。読み取ると、その人の結果画面と全問の解説が再表示されます。
+- 回答はURLに含まれているだけで、サーバーには保存していません。再表示したときは、スプレッドシートへの送信も行いません。
+- 画像はブラウザ内で作成します。QRコードの生成には `vendor/qrcode.min.js` を使っています（詳細は `vendor/README.md`）。
+- QRコードのURLは、問題の数や選択肢に依存しています。**本番後に問題やコースの `id` を変えると、それ以前に保存された画像のQRコードは、結果を再表示できなくなります**（コース選択画面が開きます）。
+
 ## ファイル構成
 
 | ファイル | 内容 |
@@ -112,7 +121,7 @@ const GAS_ENDPOINT = 'https://script.google.com/macros/s/xxxxxxxx/exec';
 
 ### 3. 公開
 
-`index.html` / `style.css` / `questions.js` / `script.js` を、HTTPSで配信できる静的ホスティング（GitHub Pages、Cloudflare Pages、Vercel など）に置きます。
+`index.html` / `style.css` / `questions.js` / `script.js` と `images/`・`vendor/` フォルダを、HTTPSで配信できる静的ホスティング（GitHub Pages、Cloudflare Pages、Vercel など）に置きます。
 
 GitHub Pagesの場合：リポジトリの「Settings > Pages」で、Source を「Deploy from a branch」、ブランチを `main`・フォルダを `/ (root)` にします。
 

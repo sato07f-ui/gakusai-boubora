@@ -217,8 +217,59 @@ function evaluate(set, answers) {
   return { items, score, result };
 }
 
+// ===== 結果URL（QRコードから結果を再表示するため） =====
+// 例: ?c=elementary&a=BBACBBBBCB （はい/いいえ は Y/N）
+function encodeAnswers(set, answers) {
+  if (set.type === "choice") return answers.join("");
+  return answers.map((a) => (a === "はい" ? "Y" : "N")).join("");
+}
+
+function decodeAnswers(set, code) {
+  const chars = Array.from(code || "");
+  if (chars.length !== set.questions.length) return null;
+  const answers = chars.map((ch, i) => {
+    if (set.type === "choice") return ch in set.questions[i].choices ? ch : null;
+    if (ch === "Y") return "はい";
+    if (ch === "N") return "いいえ";
+    return null;
+  });
+  return answers.includes(null) ? null : answers;
+}
+
+function buildResultUrl(set, answers) {
+  const url = new URL(location.href);
+  url.search = "";
+  url.hash = "";
+  url.searchParams.set("c", set.id);
+  url.searchParams.set("a", encodeAnswers(set, answers));
+  return url.toString();
+}
+
+function clearResultUrl() {
+  if (location.search) history.replaceState(null, "", location.pathname);
+  $("revisit-note").hidden = true;
+}
+
+// URLに結果が含まれていれば、その結果画面を表示する（データ送信はしない）
+function restoreFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const set = QUIZ_SETS.find((s) => s.id && s.id === params.get("c"));
+  if (!set) return false;
+  const answers = decodeAnswers(set, params.get("a"));
+  if (!answers) return false;
+
+  state.set = set;
+  state.answers = answers;
+  setHeader(set.title, set.subtitle || "");
+  renderResult(set, evaluate(set, answers));
+  $("revisit-note").hidden = false;
+  return true;
+}
+
 // ===== 結果描画 =====
-function renderResult(set, { items, score, result }) {
+function renderResult(set, evaluation) {
+  const { items, score, result } = evaluation;
+  state.evaluation = evaluation;
   $("result-rank").className = `card result-rank ${TONE_CLASS[result.tone] || ""}`;
   $("result-score").textContent = `${set.scoreLabel}：${score} / ${items.length}`;
   $("result-title").textContent = result.title;
@@ -291,6 +342,279 @@ function renderLinks(set) {
   });
 }
 
+// ===== 結果画像（認定カード） =====
+const CARD_WIDTH = 1080;
+const CARD_PADDING = 64;
+const CARD_FONT = '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif';
+const CARD_TONES = {
+  danger: { bg: "#fef2f2", accent: "#dc2626" },
+  caution: { bg: "#fefce8", accent: "#a16207" },
+  safe: { bg: "#f0fdf4", accent: "#16a34a" },
+};
+
+// 行頭に来てはいけない文字（閉じかっこ・句読点など）
+const NO_LINE_START = "」』）)］】、。，．・！？!?ー…";
+
+function wrapLines(ctx, text, maxWidth) {
+  const lines = [];
+  let line = "";
+  Array.from(text || "").forEach((ch) => {
+    if (ctx.measureText(line + ch).width > maxWidth && line) {
+      if (NO_LINE_START.includes(ch) && Array.from(line).length > 1) {
+        // 直前の1文字ごと次の行へ送る
+        const chars = Array.from(line);
+        const last = chars.pop();
+        lines.push(chars.join(""));
+        line = last + ch;
+      } else {
+        lines.push(line);
+        line = ch;
+      }
+    } else {
+      line += ch;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+
+function fitText(ctx, text, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  const chars = Array.from(text);
+  while (chars.length && ctx.measureText(chars.join("") + "…").width > maxWidth) chars.pop();
+  return chars.join("") + "…";
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function formatDate(date) {
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+}
+
+// draw=false で高さだけを計算し、draw=true で実際に描く
+function layoutCard(ctx, draw, { set, evaluation, url }) {
+  const { items, score, result } = evaluation;
+  const tone = CARD_TONES[result.tone] || CARD_TONES.safe;
+  const inner = CARD_WIDTH - CARD_PADDING * 2;
+  let y = 0;
+
+  const text = (str, x, ty, font, color, align = "left") => {
+    ctx.font = font;
+    if (!draw) return;
+    ctx.fillStyle = color;
+    ctx.textAlign = align;
+    ctx.textBaseline = "top";
+    ctx.fillText(str, x, ty);
+  };
+  const lines = (str, font, maxWidth) => {
+    ctx.font = font;
+    return wrapLines(ctx, str, maxWidth);
+  };
+
+  // --- ヘッダー ---
+  const titleFont = `bold 34px ${CARD_FONT}`;
+  const setTitleLines = lines(set.title, titleFont, inner);
+  const headerH = 56 + 56 + setTitleLines.length * 48 + 20 + 30 + 48;
+  if (draw) {
+    const grad = ctx.createLinearGradient(0, 0, CARD_WIDTH, headerH);
+    grad.addColorStop(0, "#1e3a8a");
+    grad.addColorStop(1, "#172554");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CARD_WIDTH, headerH);
+  }
+  y = 56;
+  text(APP_TITLE, CARD_WIDTH / 2, y, `bold 44px ${CARD_FONT}`, "#ffffff", "center");
+  y += 56;
+  setTitleLines.forEach((l) => {
+    text(l, CARD_WIDTH / 2, y, titleFont, "#dbeafe", "center");
+    y += 48;
+  });
+  y += 20;
+  text(`${formatDate(new Date())} の結果`, CARD_WIDTH / 2, y, `26px ${CARD_FONT}`, "#bfdbfe", "center");
+  y = headerH + 40;
+
+  // --- 判定 ---
+  const rankFont = `bold 46px ${CARD_FONT}`;
+  const stateFont = `28px ${CARD_FONT}`;
+  const rankLines = lines(result.title, rankFont, inner - 64);
+  const stateLines = lines(result.state || "", stateFont, inner - 64);
+  const boxH = 40 + 44 + 16 + rankLines.length * 62 + 12 + stateLines.length * 44 + 40;
+  if (draw) {
+    roundRect(ctx, CARD_PADDING, y, inner, boxH, 28);
+    ctx.fillStyle = tone.bg;
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
+    ctx.fillStyle = tone.accent;
+    ctx.fillRect(CARD_PADDING, y, inner, 12);
+    ctx.restore();
+  }
+  let by = y + 40;
+  text(`${set.scoreLabel}　${score} / ${items.length}`, CARD_WIDTH / 2, by, `bold 34px ${CARD_FONT}`, "#4b5563", "center");
+  by += 44 + 16;
+  rankLines.forEach((l) => {
+    text(l, CARD_WIDTH / 2, by, rankFont, tone.accent, "center");
+    by += 62;
+  });
+  by += 12;
+  stateLines.forEach((l) => {
+    text(l, CARD_PADDING + 32, by, stateFont, "#1f2937");
+    by += 44;
+  });
+  y += boxH + 48;
+
+  // --- 1問ずつの結果 ---
+  text("1問ずつの結果", CARD_PADDING, y, `bold 34px ${CARD_FONT}`, "#1e3a8a");
+  y += 60;
+  const colGap = 24;
+  const colW = (inner - colGap) / 2;
+  const rowH = 72;
+  const rows = Math.ceil(items.length / 2);
+  items.forEach(({ q, good }, i) => {
+    const col = i < rows ? 0 : 1;
+    const row = i < rows ? i : i - rows;
+    const x = CARD_PADDING + col * (colW + colGap);
+    const ry = y + row * rowH;
+    if (draw) {
+      roundRect(ctx, x, ry, colW, rowH - 12, 14);
+      ctx.fillStyle = good ? "#f0fdf4" : "#fef2f2";
+      ctx.fill();
+      roundRect(ctx, x + 12, ry + 12, 64, 36, 8);
+      ctx.fillStyle = good ? "#1e3a8a" : "#dc2626";
+      ctx.fill();
+    }
+    text(`Q${i + 1}`, x + 44, ry + 16, `bold 24px ${CARD_FONT}`, "#ffffff", "center");
+    const mark = set.type === "choice" ? (good ? "○" : "×") : good ? "OK" : "注意";
+    const markColor = good ? "#16a34a" : "#dc2626";
+    ctx.font = `bold 30px ${CARD_FONT}`;
+    const markW = ctx.measureText(mark).width;
+    text(mark, x + colW - 20, ry + 13, `bold 30px ${CARD_FONT}`, markColor, "right");
+    ctx.font = `26px ${CARD_FONT}`;
+    const title = fitText(ctx, q.title || "", colW - 92 - markW - 36);
+    text(title, x + 92, ry + 15, `26px ${CARD_FONT}`, "#1f2937");
+  });
+  y += rows * rowH + 36;
+
+  // --- QRコード ---
+  const qrSize = 360;
+  const qrBoxH = 40 + 56 + 20 + qrSize + 24 + 40 + 40;
+  if (draw) {
+    roundRect(ctx, CARD_PADDING, y, inner, qrBoxH, 28);
+    ctx.fillStyle = "#eff6ff";
+    ctx.fill();
+    ctx.strokeStyle = "#93c5fd";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+  let qy = y + 40;
+  text("📘 解説はこちらから！", CARD_WIDTH / 2, qy, `bold 44px ${CARD_FONT}`, "#1e3a8a", "center");
+  qy += 56 + 20;
+  if (draw) drawQr(ctx, url, (CARD_WIDTH - qrSize) / 2, qy, qrSize);
+  qy += qrSize + 24;
+  text("カメラで読み取ると、全問の解説をもう一度見られます", CARD_WIDTH / 2, qy, `28px ${CARD_FONT}`, "#374151", "center");
+  y += qrBoxH + 40;
+
+  // --- フッター ---
+  const footer = document.querySelector(".site-footer").textContent.trim();
+  text(footer, CARD_WIDTH / 2, y, `24px ${CARD_FONT}`, "#6b7280", "center");
+  y += 24 + 48;
+
+  return y;
+}
+
+function drawQr(ctx, url, x, y, size) {
+  const qr = qrcode(0, "M");
+  qr.addData(url);
+  qr.make();
+  const count = qr.getModuleCount();
+  const quiet = 4;
+  const cell = Math.floor(size / (count + quiet * 2));
+  const total = cell * (count + quiet * 2);
+  const ox = x + Math.floor((size - total) / 2);
+  const oy = y + Math.floor((size - total) / 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(x, y, size, size);
+  ctx.fillStyle = "#000000";
+  for (let r = 0; r < count; r++) {
+    for (let c = 0; c < count; c++) {
+      if (qr.isDark(r, c)) ctx.fillRect(ox + (c + quiet) * cell, oy + (r + quiet) * cell, cell, cell);
+    }
+  }
+}
+
+function createResultCard() {
+  const data = {
+    set: state.set,
+    evaluation: state.evaluation,
+    url: buildResultUrl(state.set, state.answers),
+  };
+  const measure = document.createElement("canvas").getContext("2d");
+  const height = layoutCard(measure, false, data);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = CARD_WIDTH;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#eef2f7";
+  ctx.fillRect(0, 0, CARD_WIDTH, height);
+  layoutCard(ctx, true, data);
+  return canvas;
+}
+
+let cardFile = null;
+let cardObjectUrl = null;
+
+function openSaveModal() {
+  if (!state.set || !state.evaluation) return;
+  const canvas = createResultCard();
+  canvas.toBlob((blob) => {
+    if (!blob) return;
+    const d = new Date();
+    const stamp = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+    const fileName = `cyber-check-${state.set.id || "result"}-${stamp}.png`;
+    cardFile = new File([blob], fileName, { type: "image/png" });
+    if (cardObjectUrl) URL.revokeObjectURL(cardObjectUrl);
+    cardObjectUrl = URL.createObjectURL(blob);
+
+    $("save-preview").src = cardObjectUrl;
+    $("download-link").href = cardObjectUrl;
+    $("download-link").download = fileName;
+
+    const canShare = !!(navigator.canShare && navigator.canShare({ files: [cardFile] }));
+    $("share-btn").hidden = !canShare;
+    $("download-link").className = canShare ? "btn btn-secondary" : "btn btn-primary";
+
+    $("save-modal").hidden = false;
+    document.body.style.overflow = "hidden";
+  }, "image/png");
+}
+
+function closeSaveModal() {
+  $("save-modal").hidden = true;
+  document.body.style.overflow = "";
+}
+
+async function shareCard() {
+  if (!cardFile) return;
+  try {
+    await navigator.share({ files: [cardFile] });
+  } catch (err) {
+    if (err.name !== "AbortError") {
+      console.warn("共有に失敗しました", err);
+      $("share-btn").hidden = true;
+      $("download-link").className = "btn btn-primary";
+    }
+  }
+}
+
 // ===== データ送信（結果表示をブロックしない） =====
 function sendData(payload) {
   if (!GAS_ENDPOINT) return;
@@ -307,7 +631,9 @@ function sendData(payload) {
 // ===== 画面遷移 =====
 function backToCourses() {
   clearAdvanceTimer();
+  clearResultUrl();
   state.set = null;
+  state.evaluation = null;
   setHeader(APP_TITLE, APP_SUBTITLE);
   showScreen("course-screen");
 }
@@ -356,5 +682,13 @@ $("restart-btn").addEventListener("click", () => {
   backToCourses();
 });
 
+$("save-image-btn").addEventListener("click", openSaveModal);
+$("share-btn").addEventListener("click", shareCard);
+$("modal-close-btn").addEventListener("click", closeSaveModal);
+$("save-modal").addEventListener("click", (e) => {
+  if (e.target === $("save-modal")) closeSaveModal();
+});
+
 renderCourses();
 renderSurvey();
+restoreFromUrl();

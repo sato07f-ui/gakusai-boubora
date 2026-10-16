@@ -6,6 +6,7 @@
  *
  * ──────────────────────────────────────────────
  * ■ セットの項目
+ *   id          : コースの識別名（半角英字）。結果画像のQRコードのURLに使うので、本番後は変えない
  *   sheetName   : 回答を保存するシート名（Code.gs の ALLOWED_SHEETS と一致させる）
  *   courseImage : コース選択ボタンの画像（images フォルダに置いたファイル）
  *   courseIcon  : 画像がないときに代わりに表示する絵文字（省略可）
@@ -56,6 +57,7 @@ const QUIZ_SETS = [
   // 小学生向け
   // ===================================================================
   {
+    id: "elementary",
     sheetName: "回答_小学生",
     courseImage: "images/tsugaku_boy.png",
     courseIcon: "🧒",
@@ -250,6 +252,7 @@ const QUIZ_SETS = [
   // 中高大学生向け
   // ===================================================================
   {
+    id: "student",
     sheetName: "回答_中高大学生",
     courseImage: "images/tablet02_schoolboy.png",
     courseIcon: "🎓",
