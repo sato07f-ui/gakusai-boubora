@@ -387,6 +387,29 @@ const QUIZ_SETS = [
           "その高い意識をぜひ周りの友人にもシェアし、巧妙化するサイバー犯罪への注意を広めてあげてください！",
       },
     ],
+    linksTitle: "📚 もっと学ぼう",
+    links: [
+      {
+        title: "今こそ考えよう 情報モラル・セキュリティ（IPA）",
+        url: "https://www.ipa.go.jp/security/imakoso/index.html",
+        note: "SNS、パスワードと2段階認証、偽警告、スマホの安全対策などを、中高生・一般向けに解説しています。",
+      },
+      {
+        title: "インターネットの安全・安心ハンドブック（国家サイバー統括室）",
+        url: "https://security-portal.cyber.go.jp/guidance/handbook.html",
+        note: "一般の利用者向けに、身につけておきたいセキュリティ対策をまとめた無料のハンドブックです。",
+      },
+      {
+        title: "フィッシング対策協議会",
+        url: "https://www.antiphishing.jp/",
+        note: "実在の企業をかたる偽メール・偽SMSの最新事例と、その見分け方・対策を確認できます。",
+      },
+      {
+        title: "サイバー事案に関する相談窓口（警察庁）",
+        url: "https://www.npa.go.jp/bureau/cyber/soudan.html",
+        note: "被害にあったときの通報・相談窓口（オンライン受付、消費者ホットライン188 など）の案内です。",
+      },
+    ],
   },
 ];
 
