@@ -6,161 +6,261 @@
 const GAS_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbzMc8sEuJDVy35eWM8a_2PJa4SE8yNCYmomkH7gZSh_EskyCgC4OtwsGcIsDfrqsKU0/exec";
 
-// ===== 定義データ =====
-const QUESTIONS = [
-  {
-    id: "q1",
-    text: "複数のアプリやWebサイトで、同じ（または似た）パスワードを使い回している",
-    advice:
-      "アプリごとに違うパスワードを設定するか、パスワード管理アプリを使いましょう。",
-  },
-  {
-    id: "q2",
-    text: "SNSに写真を投稿するとき、撮影場所の「位置情報（GPS）」がついたまま投稿することがある",
-    advice:
-      "スマホのカメラ設定から「位置情報を保存する」機能をオフにしましょう。",
-  },
-  {
-    id: "q3",
-    text: "SNSで面識のない人から届いたメッセージやフレンド申請に、あまり警戒せず返信・承認したことがある",
-    advice:
-      "知らない人からの連絡は詐欺の入り口です。安易にリンクを踏んだり個人情報を教えたりしないように。",
-  },
-  {
-    id: "q4",
-    text: "自分のSNSアカウントは、誰でも見られる「公開（オープン）状態」にしている",
-    advice:
-      "プライベートな投稿をするアカウントは「非公開（鍵垢）」に設定し、承認した友人だけが見られるようにしましょう。",
-  },
-  {
-    id: "q5",
-    text: "カフェや街中の「鍵がかかっていない無料Wi-Fi（フリーWi-Fi）」に、よく考えず接続している",
-    advice:
-      "鍵なしWi-Fiは通信内容を盗み見られる危険があります。重要なログインや決済はキャリア回線で行いましょう。",
-  },
-];
+// 選択肢をタップしてから次の問題へ進むまでの時間（ミリ秒）
+const AUTO_ADVANCE_MS = 300;
 
-const AGE_OPTIONS = ["10代未満", "10代", "20代", "30代〜50代", "60代以上"];
+// 問題データ（QUIZ_SETS / AGE_OPTIONS / IMPRESSION_OPTIONS）は questions.js で定義
 
-const IMPRESSION_OPTIONS = [
-  "とても勉強になった！",
-  "パスワードや設定を見直そうと思った",
-  "家族や友達にも教えたい",
-  "すでに知っている内容が多かった",
-];
+const APP_TITLE = "サイバー防犯チャレンジ";
+const APP_SUBTITLE = "あなたに合ったコースを選んでね！";
 
-const RANKS = {
-  max: {
-    key: "MAX",
-    className: "rank-max",
-    title: "🔴 危険度：MAX ⚠️ すぐに防犯対策見直しレベル！",
-    state:
-      "いつアカウント乗っ取りや個人情報特定にあってもおかしくない危険な状態です。",
-    advice:
-      "パスワードの使い回しをやめ、「二段階認証」を今すぐ設定しましょう！位置情報の共有設定もオフに。",
-  },
-  caution: {
-    key: "注意",
-    className: "rank-caution",
-    title: "🟡 危険度：注意 ⚠️ ちょっとした油断が危ないレベル！",
-    state: "普段は気をつけていても、ふとした瞬間に隙が生まれやすい状態です。",
-    advice:
-      "知らない人からのDMは無視・ブロックする勇気を。投稿前の写真の背景（自宅の近くや電柱など）にも気を配りましょう。",
-  },
-  safe: {
-    key: "安全",
-    className: "rank-safe",
-    title: "🟢 危険度：安全 🛡️ この調子で鉄壁をキープ！",
-    state: "素晴らしい防犯意識です！セキュリティへの意識が高く保たれています。",
-    advice:
-      "手口は日々進化しています。周囲の友人にもぜひ、今日の気づきをシェアしてあげてください！",
-  },
+const TONE_CLASS = {
+  danger: "tone-danger",
+  caution: "tone-caution",
+  safe: "tone-safe",
 };
 
+// ===== 状態 =====
+const state = {
+  set: null,
+  index: 0,
+  answers: [],
+};
+let advanceTimer = null;
+
 // ===== DOM参照 =====
-const form = document.getElementById("diagnosis-form");
-const formScreen = document.getElementById("form-screen");
-const resultScreen = document.getElementById("result-screen");
-const formError = document.getElementById("form-error");
+const $ = (id) => document.getElementById(id);
+const screens = ["course-screen", "quiz-screen", "survey-screen", "result-screen"];
+const surveyForm = $("survey-form");
 
-// ===== フォーム描画 =====
-function renderForm() {
-  const questionsEl = document.getElementById("questions");
-  questionsEl.innerHTML = QUESTIONS.map(
-    (q, i) => `
-    <fieldset class="card question" id="field-${q.id}">
-      <legend><span class="q-num">Q${i + 1}</span>${q.text}</legend>
-      <div class="yesno">
-        <label class="yesno-option yes">
-          <input type="radio" name="${q.id}" value="はい"><span>はい</span>
-        </label>
-        <label class="yesno-option no">
-          <input type="radio" name="${q.id}" value="いいえ"><span>いいえ</span>
-        </label>
-      </div>
-    </fieldset>
-  `,
-  ).join("");
+// ===== ユーティリティ =====
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
 
-  document.getElementById("age-list").innerHTML = AGE_OPTIONS.map(
-    (age) => `
-    <label class="choice"><input type="radio" name="age" value="${age}"><span>${age}</span></label>
-  `,
-  ).join("");
+function showScreen(id) {
+  screens.forEach((s) => {
+    $(s).hidden = s !== id;
+  });
+  window.scrollTo({ top: 0 });
+}
 
-  document.getElementById("impression-list").innerHTML = IMPRESSION_OPTIONS.map(
-    (opt) => `
-    <label class="choice"><input type="checkbox" name="impression_select" value="${opt}"><span>${opt}</span></label>
-  `,
-  ).join("");
+function setHeader(title, subtitle) {
+  $("header-title").textContent = title;
+  $("header-subtitle").textContent = subtitle;
+  document.title = title;
+}
 
-  // 回答したら未回答の強調を解除
-  questionsEl.addEventListener("change", (e) => {
-    const fieldset = e.target.closest("fieldset");
-    if (fieldset) fieldset.classList.remove("unanswered");
-    if (!QUESTIONS.some((q) => !getRadioValue(q.id))) formError.hidden = true;
+function clearAdvanceTimer() {
+  clearTimeout(advanceTimer);
+  advanceTimer = null;
+}
+
+// ===== コース選択 =====
+function renderCourses() {
+  const list = $("course-list");
+  QUIZ_SETS.forEach((set) => {
+    const btn = el("button", "course-btn");
+    btn.type = "button";
+    btn.append(
+      el("span", "course-icon", set.courseIcon || ""),
+      el("span", "course-label", set.courseLabel),
+      el("span", "course-note", set.courseNote || ""),
+    );
+    btn.addEventListener("click", () => startSet(set));
+    list.appendChild(btn);
   });
 }
 
-function getRadioValue(name) {
-  const checked = form.querySelector(`input[name="${name}"]:checked`);
-  return checked ? checked.value : "";
+function startSet(set) {
+  state.set = set;
+  state.index = 0;
+  state.answers = new Array(set.questions.length).fill("");
+  surveyForm.reset();
+  setHeader(set.title, set.subtitle || "");
+  $("quiz-rule").textContent = set.rule || "";
+  renderQuestion();
+  showScreen("quiz-screen");
 }
 
-// ===== 診断ロジック =====
-function judge(score) {
-  if (score >= 4) return RANKS.max;
-  if (score >= 2) return RANKS.caution;
-  return RANKS.safe;
+// ===== 質問（1問ずつ） =====
+function getOptions(set, q) {
+  if (set.type === "choice") {
+    return Object.entries(q.choices).map(([key, text]) => ({
+      value: key,
+      label: key,
+      text,
+    }));
+  }
+  return [
+    { value: "はい", text: "はい" },
+    { value: "いいえ", text: "いいえ" },
+  ];
+}
+
+function renderQuestion() {
+  const { set, index } = state;
+  const q = set.questions[index];
+  const total = set.questions.length;
+
+  $("quiz-rule-card").hidden = index !== 0 || !set.rule;
+  $("progress-fill").style.width = `${((index + 1) / total) * 100}%`;
+  $("progress-text").textContent = `${index + 1} / ${total} 問`;
+
+  const card = $("question-card");
+  card.innerHTML = "";
+  if (q.category) card.appendChild(el("p", "q-category", q.category));
+  const head = el("p", "q-head");
+  head.append(el("span", "q-num", `Q${index + 1}`), document.createTextNode(q.title || ""));
+  card.append(head, el("p", "q-text", q.text));
+
+  const options = el("div", set.type === "choice" ? "options" : "options yesno");
+  getOptions(set, q).forEach((opt) => {
+    const btn = el("button", "option");
+    btn.type = "button";
+    btn.dataset.value = opt.value;
+    btn.setAttribute("aria-pressed", String(state.answers[index] === opt.value));
+    if (opt.label) btn.appendChild(el("span", "option-label", opt.label));
+    btn.appendChild(el("span", "option-text", opt.text));
+    btn.addEventListener("click", () => selectAnswer(opt.value));
+    options.appendChild(btn);
+  });
+  card.appendChild(options);
+
+  $("prev-btn").textContent = index === 0 ? "← コース選択" : "← 前へ";
+  $("next-btn").textContent = index === total - 1 ? "アンケートへ →" : "次へ →";
+  $("next-btn").disabled = !state.answers[index];
+}
+
+function selectAnswer(value) {
+  state.answers[state.index] = value;
+  $("question-card")
+    .querySelectorAll(".option")
+    .forEach((btn) => btn.setAttribute("aria-pressed", String(btn.dataset.value === value)));
+  $("next-btn").disabled = false;
+
+  clearAdvanceTimer();
+  advanceTimer = setTimeout(goNext, AUTO_ADVANCE_MS);
+}
+
+function goNext() {
+  clearAdvanceTimer();
+  if (!state.answers[state.index]) return;
+  if (state.index < state.set.questions.length - 1) {
+    state.index += 1;
+    renderQuestion();
+    window.scrollTo({ top: 0 });
+  } else {
+    showScreen("survey-screen");
+  }
+}
+
+function goPrev() {
+  clearAdvanceTimer();
+  if (state.index === 0) {
+    backToCourses();
+    return;
+  }
+  state.index -= 1;
+  renderQuestion();
+  window.scrollTo({ top: 0 });
+}
+
+// ===== アンケート =====
+function renderSurvey() {
+  AGE_OPTIONS.forEach((age) => {
+    const label = el("label", "choice");
+    const input = el("input");
+    input.type = "radio";
+    input.name = "age";
+    input.value = age;
+    label.append(input, el("span", "", age));
+    $("age-list").appendChild(label);
+  });
+  IMPRESSION_OPTIONS.forEach((opt) => {
+    const label = el("label", "choice");
+    const input = el("input");
+    input.type = "checkbox";
+    input.name = "impression_select";
+    input.value = opt;
+    label.append(input, el("span", "", opt));
+    $("impression-list").appendChild(label);
+  });
+}
+
+// ===== 判定 =====
+function evaluate(set, answers) {
+  const items = set.questions.map((q, i) => {
+    const value = answers[i];
+    const good = set.type === "choice" ? value === q.answer : value !== q.danger;
+    const record = set.type === "choice" ? `${value}${good ? "○" : "×"}` : value;
+    return { q, value, good, record };
+  });
+  const score =
+    set.type === "choice"
+      ? items.filter((it) => it.good).length
+      : items.filter((it) => !it.good).length;
+  const sorted = [...set.results].sort((a, b) => b.min - a.min);
+  const result = sorted.find((r) => score >= r.min) || sorted[sorted.length - 1];
+  return { items, score, result };
 }
 
 // ===== 結果描画 =====
-function renderResult(answers, score, rank) {
-  const rankEl = document.getElementById("result-rank");
-  rankEl.className = `card result-rank ${rank.className}`;
-  document.getElementById("result-score").textContent =
-    `「はい」の数：${score} / ${QUESTIONS.length}`;
-  document.getElementById("result-title").textContent = rank.title;
-  document.getElementById("result-state").textContent = rank.state;
-  document.getElementById("result-advice").textContent = rank.advice;
+function renderResult(set, { items, score, result }) {
+  $("result-rank").className = `card result-rank ${TONE_CLASS[result.tone] || ""}`;
+  $("result-score").textContent = `${set.scoreLabel}：${score} / ${items.length}`;
+  $("result-title").textContent = result.title;
+  $("result-state").textContent = result.state || "";
+  $("result-advice-box").hidden = !result.advice;
+  $("result-advice").textContent = result.advice || "";
 
-  const yesQuestions = QUESTIONS.filter((q) => answers[q.id] === "はい");
-  const individualEl = document.getElementById("individual-advice");
-  const listEl = document.getElementById("advice-list");
-  listEl.innerHTML = "";
-  yesQuestions.forEach((q) => {
-    const li = document.createElement("li");
-    const label = document.createElement("span");
-    label.className = "advice-q";
-    label.textContent = `Q${QUESTIONS.indexOf(q) + 1}`;
-    li.append(label, document.createTextNode(q.advice));
-    listEl.appendChild(li);
+  const explanationLabel = set.explanationLabel || "解説";
+  const tipLabel = set.tipLabel || "ワンポイント";
+  const list = $("review-list");
+  list.innerHTML = "";
+
+  items.forEach(({ q, value, good }, i) => {
+    const li = el("li", `review-item ${good ? "good" : "bad"}`);
+
+    const head = el("div", "review-head");
+    const badgeText =
+      set.type === "choice" ? (good ? "○ 正解" : "× 不正解") : good ? "✓ OK" : "⚠ 要注意";
+    head.append(
+      el("span", "q-num", `Q${i + 1}`),
+      el("span", "review-title", q.title || ""),
+      el("span", "review-badge", badgeText),
+    );
+    li.appendChild(head);
+
+    if (set.type === "choice") {
+      li.appendChild(el("p", "review-answer", `あなたの答え：${value}. ${q.choices[value]}`));
+      if (!good) {
+        li.appendChild(
+          el("p", "review-correct", `正解：${q.answer}. ${q.choices[q.answer]}`),
+        );
+      }
+    } else {
+      li.appendChild(el("p", "review-question", q.text));
+      li.appendChild(el("p", "review-answer", `あなたの答え：${value}`));
+    }
+
+    if (!good && q.explanation) {
+      const box = el("div", "review-box review-explanation");
+      box.append(el("h4", "", `📘 ${explanationLabel}`), el("p", "", q.explanation));
+      li.appendChild(box);
+    }
+    if (q.tip) {
+      const box = el("div", "review-box review-tip");
+      box.append(el("h4", "", `💡 ${tipLabel}`), el("p", "", q.tip));
+      li.appendChild(box);
+    }
+    list.appendChild(li);
   });
-  individualEl.hidden = yesQuestions.length === 0;
 
-  formScreen.hidden = true;
-  resultScreen.hidden = false;
-  window.scrollTo({ top: 0 });
+  showScreen("result-screen");
 }
 
 // ===== データ送信（結果表示をブロックしない） =====
@@ -176,62 +276,57 @@ function sendData(payload) {
   }).catch((err) => console.warn("データ送信に失敗しました", err));
 }
 
+// ===== 画面遷移 =====
+function backToCourses() {
+  clearAdvanceTimer();
+  state.set = null;
+  setHeader(APP_TITLE, APP_SUBTITLE);
+  showScreen("course-screen");
+}
+
 // ===== イベント =====
-form.addEventListener("submit", (e) => {
+$("prev-btn").addEventListener("click", goPrev);
+$("next-btn").addEventListener("click", goNext);
+
+$("survey-back-btn").addEventListener("click", () => {
+  state.index = state.set.questions.length - 1;
+  renderQuestion();
+  showScreen("quiz-screen");
+});
+
+surveyForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  const { set, answers } = state;
+  if (!set || answers.some((a) => !a)) return;
 
-  // 必須チェック
-  const unanswered = QUESTIONS.filter((q) => !getRadioValue(q.id));
-  QUESTIONS.forEach((q) => {
-    document
-      .getElementById(`field-${q.id}`)
-      .classList.toggle("unanswered", unanswered.includes(q));
-  });
-  if (unanswered.length > 0) {
-    const names = unanswered
-      .map((q) => `Q${QUESTIONS.indexOf(q) + 1}`)
-      .join("・");
-    formError.textContent = `${names} が未回答です。すべての質問に答えてください。`;
-    formError.hidden = false;
-    document
-      .getElementById(`field-${unanswered[0].id}`)
-      .scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
-  }
-  formError.hidden = true;
-
-  const answers = {};
-  QUESTIONS.forEach((q) => {
-    answers[q.id] = getRadioValue(q.id);
-  });
-  const score = QUESTIONS.filter((q) => answers[q.id] === "はい").length;
-  const rank = judge(score);
+  const evaluation = evaluate(set, answers);
+  const checkedAge = surveyForm.querySelector('input[name="age"]:checked');
 
   const payload = {
-    ...answers,
-    score,
-    rank: rank.key,
-    age: getRadioValue("age"),
+    sheet_name: set.sheetName,
+    answers: evaluation.items.map((it, i) => ({
+      label: `Q${i + 1}_${it.q.title || ""}`,
+      value: it.record,
+    })),
+    score_label: set.scoreLabel,
+    score: evaluation.score,
+    rank: evaluation.result.rank,
+    age: checkedAge ? checkedAge.value : "",
     impression_select: Array.from(
-      form.querySelectorAll('input[name="impression_select"]:checked'),
-    ).map((el) => el.value),
-    impression_text: document.getElementById("impression-text").value.trim(),
+      surveyForm.querySelectorAll('input[name="impression_select"]:checked'),
+    ).map((input) => input.value),
+    impression_text: $("impression-text").value.trim(),
   };
 
   // 先に結果を表示し、送信は待たない
-  renderResult(answers, score, rank);
+  renderResult(set, evaluation);
   sendData(payload);
 });
 
-document.getElementById("restart-btn").addEventListener("click", () => {
-  form.reset();
-  QUESTIONS.forEach((q) =>
-    document.getElementById(`field-${q.id}`).classList.remove("unanswered"),
-  );
-  formError.hidden = true;
-  resultScreen.hidden = true;
-  formScreen.hidden = false;
-  window.scrollTo({ top: 0 });
+$("restart-btn").addEventListener("click", () => {
+  surveyForm.reset();
+  backToCourses();
 });
 
-renderForm();
+renderCourses();
+renderSurvey();

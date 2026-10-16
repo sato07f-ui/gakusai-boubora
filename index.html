@@ -4,30 +4,58 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1e3a8a" />
-    <title>あなたのSNS危険度診断</title>
+    <title>サイバー防犯チャレンジ</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <header class="site-header">
-      <h1>あなたの<br />SNS危険度診断</h1>
-      <p class="subtitle">5つの質問で、あなたのネットの“スキ”をチェック！</p>
+      <h1 id="header-title">サイバー防犯チャレンジ</h1>
+      <p class="subtitle" id="header-subtitle">あなたに合ったコースを選んでね！</p>
     </header>
 
     <main>
-      <!-- ===== 診断入力画面 ===== -->
-      <section id="form-screen" class="screen">
+      <!-- ===== コース選択画面 ===== -->
+      <section id="course-screen" class="screen">
         <div class="card rules">
-          <h2>あそびかた</h2>
-          <p>
-            Q1〜Q5の質問に、ふだんの自分に近いほうを「はい」か「いいえ」で答えてください。<br />すべて答えたら「診断結果を見る」を押してね！
-          </p>
+          <h2>コースを選んでください</h2>
+          <p>質問に答えると、ネットやスマホの使い方の“スキ”がわかります。</p>
+        </div>
+        <div id="course-list" class="course-list"></div>
+        <p class="privacy">
+          🔒
+          この診断では、氏名・連絡先など<strong>個人を特定できる情報は一切取得しません</strong>。回答内容は統計目的でのみ利用します。
+        </p>
+      </section>
+
+      <!-- ===== 質問画面（1問ずつ） ===== -->
+      <section id="quiz-screen" class="screen" hidden>
+        <div class="card rules" id="quiz-rule-card">
+          <p id="quiz-rule"></p>
         </div>
 
-        <form id="diagnosis-form" novalidate>
-          <div id="questions"></div>
+        <div class="progress" aria-hidden="true">
+          <div class="progress-bar"><span id="progress-fill"></span></div>
+        </div>
+        <p class="progress-text" id="progress-text"></p>
 
+        <div class="card question" id="question-card"></div>
+
+        <div class="nav">
+          <button type="button" id="prev-btn" class="btn btn-secondary btn-small">
+            ← 前へ
+          </button>
+          <button type="button" id="next-btn" class="btn btn-primary btn-small">
+            次へ →
+          </button>
+        </div>
+      </section>
+
+      <!-- ===== アンケート画面 ===== -->
+      <section id="survey-screen" class="screen" hidden>
+        <form id="survey-form" novalidate>
           <div class="card survey">
             <h2>アンケート <span class="badge-optional">任意</span></h2>
+            <p class="survey-note">答えなくても結果を見られます。</p>
 
             <fieldset class="survey-item">
               <legend>年齢層</legend>
@@ -58,27 +86,28 @@
             この診断では、氏名・連絡先など<strong>個人を特定できる情報は一切取得しません</strong>。回答内容は統計目的でのみ利用します。
           </p>
 
-          <p id="form-error" class="form-error" role="alert" hidden></p>
-
-          <button type="submit" class="btn btn-primary">診断結果を見る</button>
+          <button type="submit" class="btn btn-primary">結果を見る</button>
+          <button type="button" id="survey-back-btn" class="btn btn-text">
+            ← 質問にもどる
+          </button>
         </form>
       </section>
 
-      <!-- ===== 診断結果画面 ===== -->
+      <!-- ===== 結果画面 ===== -->
       <section id="result-screen" class="screen" hidden>
         <div id="result-rank" class="card result-rank">
           <p class="result-score" id="result-score"></p>
           <h2 id="result-title"></h2>
           <p id="result-state"></p>
-          <div class="advice-overall">
+          <div class="advice-overall" id="result-advice-box">
             <h3>アドバイス</h3>
             <p id="result-advice"></p>
           </div>
         </div>
 
-        <div id="individual-advice" class="card" hidden>
-          <h2>あなたへの個別アドバイス</h2>
-          <ul id="advice-list" class="advice-list"></ul>
+        <div class="card">
+          <h2>1問ずつふりかえり</h2>
+          <ol id="review-list" class="review-list"></ol>
         </div>
 
         <button type="button" id="restart-btn" class="btn btn-secondary">
@@ -91,6 +120,7 @@
       <p>主催：近畿大学 防犯ボランティア</p>
     </footer>
 
+    <script src="questions.js"></script>
     <script src="script.js"></script>
   </body>
 </html>

@@ -34,16 +34,16 @@ body {
   background: linear-gradient(135deg, var(--navy), var(--navy-dark));
   color: #fff;
   text-align: center;
-  padding: 28px 16px 24px;
+  padding: 24px 16px 20px;
 }
 .site-header h1 {
   margin: 0;
-  font-size: 1.75rem;
-  line-height: 1.35;
+  font-size: 1.5rem;
+  line-height: 1.4;
   letter-spacing: 0.04em;
 }
 .subtitle {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   font-size: 0.95rem;
   opacity: 0.9;
 }
@@ -80,19 +80,80 @@ fieldset {
   min-width: 0;
 }
 
-/* ===== 質問 ===== */
-.question {
-  border: 2px solid transparent;
-  transition: border-color 0.2s, background-color 0.2s;
+/* ===== コース選択 ===== */
+.course-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
 }
-.question legend {
-  float: left;
+.course-btn {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  align-items: center;
+  text-align: left;
   width: 100%;
-  padding: 0;
-  margin-bottom: 14px;
-  font-weight: bold;
+  padding: 18px 16px;
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: border-color 0.15s, transform 0.1s;
 }
-.question legend + * { clear: both; }
+.course-btn:hover { border-color: var(--navy); }
+.course-btn:active { transform: scale(0.98); }
+.course-btn:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+.course-icon {
+  grid-row: 1 / 3;
+  font-size: 2.4rem;
+  line-height: 1;
+}
+.course-label {
+  font-size: 1.15rem;
+  font-weight: bold;
+  color: var(--navy);
+}
+.course-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ===== 進み具合 ===== */
+.progress-bar {
+  height: 8px;
+  background: #dbe3ee;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, #2563eb, var(--navy));
+  transition: width 0.25s;
+}
+.progress-text {
+  text-align: right;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 4px 0 10px;
+}
+
+/* ===== 質問 ===== */
+.q-category {
+  margin: 0 0 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.q-head {
+  margin: 0 0 8px;
+  font-weight: bold;
+  color: var(--navy);
+}
 .q-num {
   display: inline-block;
   background: var(--navy);
@@ -101,48 +162,71 @@ fieldset {
   padding: 0 8px;
   margin-right: 8px;
   font-size: 0.9rem;
+  flex-shrink: 0;
 }
-.question.unanswered {
-  border-color: var(--red);
-  background: var(--red-bg);
+.q-text {
+  margin: 0 0 16px;
+  font-size: 1.05rem;
+  font-weight: bold;
 }
 
-.yesno {
+.options {
+  display: grid;
+  gap: 10px;
+}
+.options.yesno { grid-template-columns: 1fr 1fr; }
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.options.yesno .option {
+  justify-content: center;
+  font-weight: bold;
+}
+.option-label {
+  flex-shrink: 0;
+  width: 2em;
+  height: 2em;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e5e7eb;
+  font-weight: bold;
+}
+.option[aria-pressed="true"] {
+  border-color: var(--navy);
+  background: #dbeafe;
+}
+.option[aria-pressed="true"] .option-label {
+  background: var(--navy);
+  color: #fff;
+}
+.options.yesno .option[aria-pressed="true"] {
+  background: var(--navy);
+  color: #fff;
+}
+.option:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.nav {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-}
-.yesno-option { position: relative; }
-.yesno-option input {
-  position: absolute;
-  opacity: 0;
-  inset: 0;
-  margin: 0;
-}
-.yesno-option span {
-  display: block;
-  text-align: center;
-  padding: 12px 0;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  font-weight: bold;
-  cursor: pointer;
-  background: #fff;
-  transition: all 0.15s;
-}
-.yesno-option.yes input:checked + span {
-  background: var(--red);
-  border-color: var(--red);
-  color: #fff;
-}
-.yesno-option.no input:checked + span {
-  background: var(--navy);
-  border-color: var(--navy);
-  color: #fff;
-}
-.yesno-option input:focus-visible + span {
-  outline: 3px solid #93c5fd;
-  outline-offset: 2px;
 }
 
 /* ===== アンケート ===== */
@@ -154,6 +238,11 @@ fieldset {
   padding: 2px 8px;
   vertical-align: middle;
   margin-left: 4px;
+}
+.survey-note {
+  margin: -4px 0 14px;
+  font-size: 0.85rem;
+  color: var(--muted);
 }
 .survey-item {
   margin: 0 0 16px;
@@ -173,9 +262,7 @@ fieldset {
   flex-wrap: wrap;
   gap: 8px;
 }
-.choice {
-  position: relative;
-}
+.choice { position: relative; }
 .choice input {
   position: absolute;
   opacity: 0;
@@ -215,7 +302,7 @@ fieldset {
   border-color: var(--navy);
 }
 
-/* ===== 注記・エラー ===== */
+/* ===== 注記 ===== */
 .privacy {
   font-size: 0.85rem;
   color: var(--muted);
@@ -223,12 +310,6 @@ fieldset {
   border-radius: 10px;
   padding: 12px 14px;
   margin: 0 0 16px;
-}
-.form-error {
-  color: var(--red);
-  font-weight: bold;
-  text-align: center;
-  margin: 0 0 12px;
 }
 
 /* ===== ボタン ===== */
@@ -245,15 +326,31 @@ fieldset {
   transition: transform 0.1s, opacity 0.15s;
 }
 .btn:active { transform: scale(0.98); }
+.btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+.btn-small {
+  padding: 12px;
+  font-size: 1rem;
+}
 .btn-primary {
   background: linear-gradient(135deg, #2563eb, var(--navy));
   color: #fff;
   box-shadow: 0 4px 12px rgba(30, 58, 138, 0.35);
 }
+.btn-primary:disabled { box-shadow: none; }
 .btn-secondary {
   background: #fff;
   color: var(--navy);
   border: 2px solid var(--navy);
+}
+.btn-text {
+  background: none;
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-top: 8px;
 }
 
 /* ===== 結果画面 ===== */
@@ -284,35 +381,68 @@ fieldset {
 }
 .advice-overall p { margin: 0; }
 
-.rank-max { border-top-color: var(--red); background: var(--red-bg); }
-.rank-max h2 { color: var(--red); }
-.rank-caution { border-top-color: var(--yellow); background: var(--yellow-bg); }
-.rank-caution h2 { color: #a16207; }
-.rank-safe { border-top-color: var(--green); background: var(--green-bg); }
-.rank-safe h2 { color: var(--green); }
+.tone-danger { border-top-color: var(--red); background: var(--red-bg); }
+.tone-danger h2 { color: var(--red); }
+.tone-caution { border-top-color: var(--yellow); background: var(--yellow-bg); }
+.tone-caution h2 { color: #a16207; }
+.tone-safe { border-top-color: var(--green); background: var(--green-bg); }
+.tone-safe h2 { color: var(--green); }
 
-.advice-list {
+/* ===== ふりかえり ===== */
+.review-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.advice-list li {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 12px 0;
+.review-item {
+  padding: 14px 0;
   border-top: 1px solid #e5e7eb;
 }
-.advice-list li:first-child { border-top: none; padding-top: 0; }
-.advice-q {
-  flex-shrink: 0;
-  background: var(--red);
-  color: #fff;
-  border-radius: 6px;
-  padding: 0 8px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  line-height: 1.8;
+.review-item:first-child { border-top: none; padding-top: 0; }
+.review-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
 }
+.review-title {
+  flex: 1;
+  font-weight: bold;
+}
+.review-badge {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.review-item.good .review-badge { background: var(--green-bg); color: var(--green); }
+.review-item.bad .review-badge { background: var(--red-bg); color: var(--red); }
+.review-item.bad .q-num { background: var(--red); }
+
+.review-question,
+.review-answer,
+.review-correct {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+.review-question { color: var(--muted); }
+.review-correct {
+  color: var(--green);
+  font-weight: bold;
+}
+.review-box {
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+}
+.review-box h4 {
+  margin: 0 0 2px;
+  font-size: 0.85rem;
+}
+.review-box p { margin: 0; }
+.review-explanation { background: var(--red-bg); }
+.review-tip { background: #eff6ff; }
 
 #result-screen .btn { margin-top: 8px; }
