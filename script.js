@@ -65,8 +65,17 @@ function renderCourses() {
   QUIZ_SETS.forEach((set) => {
     const btn = el("button", "course-btn");
     btn.type = "button";
+    const visual = el("span", "course-visual");
+    if (set.courseImage) {
+      const img = el("img");
+      img.src = set.courseImage;
+      img.alt = "";
+      visual.appendChild(img);
+    } else {
+      visual.appendChild(el("span", "course-icon", set.courseIcon || ""));
+    }
     btn.append(
-      el("span", "course-icon", set.courseIcon || ""),
+      visual,
       el("span", "course-label", set.courseLabel),
       el("span", "course-note", set.courseNote || ""),
     );

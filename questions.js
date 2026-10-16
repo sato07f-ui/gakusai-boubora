@@ -7,7 +7,8 @@
  * ──────────────────────────────────────────────
  * ■ セットの項目
  *   sheetName   : 回答を保存するシート名（Code.gs の ALLOWED_SHEETS と一致させる）
- *   courseIcon  : コース選択ボタンのアイコン
+ *   courseImage : コース選択ボタンの画像（images フォルダに置いたファイル）
+ *   courseIcon  : 画像がないときに代わりに表示する絵文字（省略可）
  *   courseLabel : コース選択ボタンの名前
  *   courseNote  : コース選択ボタンの説明
  *   title       : コースを選んだあとに表示するタイトル
@@ -53,6 +54,7 @@ const QUIZ_SETS = [
   // ===================================================================
   {
     sheetName: "回答_小学生",
+    courseImage: "images/tsugaku_boy.png",
     courseIcon: "🧒",
     courseLabel: "小学生",
     courseNote: "ネット＆スマホ安全マスタークイズ（3択・10問）",
@@ -228,6 +230,7 @@ const QUIZ_SETS = [
   // ===================================================================
   {
     sheetName: "回答_中高大学生",
+    courseImage: "images/tablet02_schoolboy.png",
     courseIcon: "🎓",
     courseLabel: "中学生・高校生・大学生",
     courseNote: "サイバー＆PCセキュリティ危険度診断（はい/いいえ・10問）",
